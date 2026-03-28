@@ -394,7 +394,7 @@ main { max-width: 1020px; margin: 0 auto; padding: 1.5rem 1rem 6rem; }
 // ══════════════════════════════════════════════════════
 const SHEET_CATALOGO = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRdFR65NFzEvriBuuKOVrcEIrl4mjAlBSqRfJ5S8zx62IySSq1B272pA1zvlQwWf3K53X7SUnXEz8Tx/pub?gid=1321919523&single=true&output=csv';
 const SHEET_EM_BREVE = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRdFR65NFzEvriBuuKOVrcEIrl4mjAlBSqRfJ5S8zx62IySSq1B272pA1zvlQwWf3K53X7SUnXEz8Tx/pub?gid=1898557010&single=true&output=csv';
-const WHATSAPP_NUMBER = '5511999999999';
+const WHATSAPP_NUMBER = '5511966204994';
 // ══════════════════════════════════════════════════════
 
 const DEMO = [
@@ -516,7 +516,81 @@ function soonCardHTML(p) {
        </div>`
     : `<div class="soon-card-img">${mugSVG(color)}</div>`;
   const styleRow=`<div class="card-style-row">${styleDot(color)}<span class="soon-card-style">${p.estilo}</span></div>`;
-  return `<div class="soon-card">${imgArea}<div class="soon-overlay">Em breve</div><div class="soon-card-body"><div class="soon-card-name">${p.nome}</div>${styleRow}<div class="soon-card-desc">${p.descricao}</div><div class="soon-meta"><span>📅 <strong>${p.previsao}</strong></span>${p.quantidade?`<span>🍺 <strong>${p.quantidade} un.</strong></span>`:''}</div></div><div class="soon-card-footer"><div><div class="soon-price ${pr?'has':''}">${pr?'R$ '+pr.toFixed(2).replace('.',','):'A confirmar'}</div><div class="soon-interested" id="int-${p.id}"><span class="soon-interested-dot"></span>${total} ${total===1?'pessoa aguardando':'pessoas aguardando'}</div></div><button class="notify-btn" id="nbtn-${p.id}" onclick="openModal('${p.id}')">${reg>0?'✓ Registrado':'🔔 Avise-me'}</button></div></div>`;
+  return `<div class="soon-card" onclick="openSoonDetail('${p.id}')" style="cursor:pointer">${imgArea}<div class="soon-overlay">Em breve</div><div class="soon-card-body"><div class="soon-card-name">${p.nome}</div>${styleRow}<div class="soon-card-desc">${p.descricao}</div><div class="soon-meta"><span>📅 <strong>${p.previsao}</strong></span>${p.quantidade?`<span>🍺 <strong>${p.quantidade} un.</strong></span>`:''}</div></div><div class="soon-card-footer" onclick="event.stopPropagation()"><div><div class="soon-price ${pr?'has':''}">${pr?'R$ '+pr.toFixed(2).replace('.',','):'A confirmar'}</div><div class="soon-interested" id="int-${p.id}"><span class="soon-interested-dot"></span>${total} ${total===1?'pessoa aguardando':'pessoas aguardando'}</div></div><button class="notify-btn" id="nbtn-${p.id}" onclick="openModal('${p.id}')">${reg>0?'✓ Registrado':'🔔 Avise-me'}</button></div></div>`;
+}
+
+function openSoonDetail(id) {
+  const p = soonProducts.find(x => x.id === id);
+  if (!p) return;
+  const color = styleColor(p.estilo);
+  const pr = parseFloat(p.preco) || 0;
+  const reg = localInterest[p.id] || 0;
+  const total = (parseInt(p.interessados_base)||0) + reg;
+
+  slideFotos = getFotos(p);
+  slideIndex = 0;
+
+  const imgEl = document.getElementById('detail-img');
+  imgEl.style.background = color + '22';
+  imgEl.querySelectorAll('img,.detail-fallback,.slide-btn,.slide-dots').forEach(el=>el.remove());
+
+  if (slideFotos.length) {
+    slideFotos.forEach((url, i) => {
+      const img = document.createElement('img');
+      img.src = url; img.alt = p.nome;
+      if (i === 0) img.classList.add('active');
+      imgEl.appendChild(img);
+    });
+    if (slideFotos.length > 1) {
+      const prev = document.createElement('button');
+      prev.className = 'slide-btn prev'; prev.innerHTML = '‹';
+      prev.onclick = (e) => { e.stopPropagation(); changeSlide(-1); };
+      const next = document.createElement('button');
+      next.className = 'slide-btn next'; next.innerHTML = '›';
+      next.onclick = (e) => { e.stopPropagation(); changeSlide(1); };
+      const dots = document.createElement('div');
+      dots.className = 'slide-dots';
+      dots.innerHTML = slideFotos.map((_,i) => `<span class="slide-dot${i===0?' active':''}" onclick="event.stopPropagation();goSlide(${i})"></span>`).join('');
+      imgEl.appendChild(prev); imgEl.appendChild(next); imgEl.appendChild(dots);
+    }
+  } else {
+    const fb = document.createElement('div');
+    fb.className = 'detail-fallback';
+    fb.style.cssText = 'display:flex;align-items:center;justify-content:center;width:100%;height:100%';
+    fb.innerHTML = mugSVG(color);
+    imgEl.appendChild(fb);
+  }
+
+  const specsHTML = [
+    p.abv && p.abv!=='—' ? `<div class="detail-spec"><strong>${p.abv}%</strong>ABV</div>` : '',
+    p.ibu && p.ibu!=='—' ? `<div class="detail-spec"><strong>${p.ibu}</strong>IBU</div>` : '',
+    p.quantidade ? `<div class="detail-spec"><strong>${p.quantidade}</strong>un. planejadas</div>` : '',
+  ].filter(Boolean).join('');
+
+  document.getElementById('detail-body').innerHTML = `
+    <div class="detail-tags"><span class="soon-badge">Em breve</span>${styleDot(color)}<span style="font-size:11px;color:var(--text3)">${p.estilo}</span></div>
+    <div>
+      <div class="detail-name">${p.nome}</div>
+      ${p.cervejaria?`<div class="detail-brewery">${p.cervejaria}</div>`:''}
+    </div>
+    ${specsHTML?`<div class="detail-specs-row">${specsHTML}</div>`:''}
+    ${p.descricao?`<div><div class="detail-section-title">Descrição</div><div class="detail-text">${p.descricao}</div></div>`:''}
+    ${p.harmonizacao?`<div><div class="detail-section-title">Harmonização</div><div class="detail-harmonia">${p.harmonizacao.split(',').map(h=>`<span class="detail-harmonia-tag">${h.trim()}</span>`).join('')}</div></div>`:''}
+    ${p.historia?`<div><div class="detail-section-title">História & Receita</div><div class="detail-text">${p.historia}</div></div>`:''}
+  `;
+
+  document.getElementById('detail-footer').innerHTML = `
+    <div>
+      <div class="soon-price ${pr?'has':''}" style="font-size:18px;font-weight:700">${pr?'R$ '+pr.toFixed(2).replace('.',','):'Preço a confirmar'}</div>
+      <div style="font-size:11px;color:var(--text2);margin-top:3px">📅 Previsão: <strong>${p.previsao}</strong></div>
+      <div class="soon-interested" style="margin-top:4px" id="detail-int-${p.id}"><span class="soon-interested-dot"></span>${total} ${total===1?'pessoa aguardando':'pessoas aguardando'}</div>
+    </div>
+    <button class="notify-btn" style="padding:11px 16px;font-size:13px" id="detail-notify-${p.id}" onclick="openModal('${p.id}');closeDetail()">
+      ${reg>0?'✓ Registrado':'🔔 Avise-me'}
+    </button>
+  `;
+
+  document.getElementById('detail-overlay').classList.add('open');
 }
 
 let slideIndex = 0;
