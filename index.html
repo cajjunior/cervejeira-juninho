@@ -327,9 +327,9 @@ main { max-width: 1020px; margin: 0 auto; padding: 1.5rem 1rem 6rem; }
   </div>
   <div class="filters">
     <button class="fbtn active" onclick="setFilter('todos',this)">Todos</button>
-    <button class="fbtn" onclick="setFilter('alphahops',this)">⚗️ Alphahops</button>
+    <button class="fbtn" onclick="setFilter('alphahops',this)">🍺 Alphahops</button>
     <button class="fbtn" onclick="setFilter('revenda',this)">🏪 Revenda</button>
-    <button class="fbtn" onclick="setFilter('combo',this)">🎁 Combos</button>
+    <button class="fbtn" onclick="setFilter('combo',this)">📦 Combos</button>
   </div>
   <p class="section-label" id="section-label">Carregando...</p>
   <div class="grid" id="grid"><div class="empty">Carregando a cervejeira... 🍺</div></div>
@@ -472,7 +472,7 @@ function renderCatalog() {
 function stockInfo(n) { n=parseInt(n)||0; if(n===0) return{cls:'s-out',label:'Esgotado'}; if(n<=3) return{cls:'s-low',label:`Últimas ${n}`}; return{cls:'s-ok',label:`${n} disponíveis`}; }
 
 function typeTag(t) {
-  const m={alphahops:['tag-alphahops','⚗️ Alphahops'],revenda:['tag-revenda','🏪 Revenda'],combo:['tag-combo','🎁 Combo']};
+  const m={alphahops:['tag-alphahops','🍺 Alphahops'],revenda:['tag-revenda','🏪 Revenda'],combo:['tag-combo','📦 Combo']};
   const[cls,lbl]=m[t]||['tag-alphahops',t]; return `<span class="tag ${cls}">${lbl}</span>`;
 }
 
