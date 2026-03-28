@@ -303,7 +303,7 @@ main { max-width: 1020px; margin: 0 auto; padding: 1.5rem 1rem 6rem; }
       </svg>
       <div>
         <div class="logo-text">Cervejeira do Juninho</div>
-        <div class="logo-sub">Osasco, SP</div>
+        <div class="logo-sub">Santana de Parnaíba, SP</div>
       </div>
     </a>
     <button class="cart-btn" onclick="openCart()">
@@ -316,7 +316,7 @@ main { max-width: 1020px; margin: 0 auto; padding: 1.5rem 1rem 6rem; }
 <div class="hero">
   <div class="live-pill"><span class="live-dot"></span> atualizado em tempo real</div>
   <h1>O que tem na geladeira hoje?</h1>
-  <p>Cervejas artesanais e selecionadas, geladas e prontas pra você.</p>
+  <p>Só as melhores — artesanais e selecionadas, geladas e prontas pra você. Peça agora!</p>
 </div>
 
 <main>
@@ -507,8 +507,13 @@ function renderSoon() {
 function soonCardHTML(p) {
   const reg=localInterest[p.id]||0; const total=(parseInt(p.interessados_base)||0)+reg;
   const pr=parseFloat(p.preco)||0; const color=styleColor(p.estilo);
-  const imgArea=p.foto_url
-    ? `<div class="soon-card-img" style="position:relative"><div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center">${mugSVG(color)}</div><img src="${p.foto_url}" alt="${p.nome}" onload="this.style.opacity=1" onerror="this.style.display='none'" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:1;opacity:0;transition:opacity .35s"></div>`
+  const fotos=getFotos(p);
+  const imgArea=fotos.length
+    ? `<div class="soon-card-img" style="position:relative">
+        <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center">${mugSVG(color)}</div>
+        <img src="${fotos[0]}" alt="${p.nome}" onload="this.style.opacity=1" onerror="this.style.display='none'" style="position:absolute;inset:0;width:100%;height:100%;object-fit:contain;z-index:1;opacity:0;transition:opacity .35s">
+        ${fotos.length>1?`<span class="card-multi-badge" style="z-index:3">📷 ${fotos.length}</span>`:''}
+       </div>`
     : `<div class="soon-card-img">${mugSVG(color)}</div>`;
   const styleRow=`<div class="card-style-row">${styleDot(color)}<span class="soon-card-style">${p.estilo}</span></div>`;
   return `<div class="soon-card">${imgArea}<div class="soon-overlay">Em breve</div><div class="soon-card-body"><div class="soon-card-name">${p.nome}</div>${styleRow}<div class="soon-card-desc">${p.descricao}</div><div class="soon-meta"><span>📅 <strong>${p.previsao}</strong></span>${p.quantidade?`<span>🍺 <strong>${p.quantidade} un.</strong></span>`:''}</div></div><div class="soon-card-footer"><div><div class="soon-price ${pr?'has':''}">${pr?'R$ '+pr.toFixed(2).replace('.',','):'A confirmar'}</div><div class="soon-interested" id="int-${p.id}"><span class="soon-interested-dot"></span>${total} ${total===1?'pessoa aguardando':'pessoas aguardando'}</div></div><button class="notify-btn" id="nbtn-${p.id}" onclick="openModal('${p.id}')">${reg>0?'✓ Registrado':'🔔 Avise-me'}</button></div></div>`;
