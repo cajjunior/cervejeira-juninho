@@ -308,8 +308,8 @@ main { max-width: 1020px; margin: 0 auto; padding: 1.5rem 1rem 6rem; }
 //  CONFIGURAÇÃO — edite apenas este bloco
 // ══════════════════════════════════════════════════════
 const SHEET_CATALOGO = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRdFR65NFzEvriBuuKOVrcEIrl4mjAlBSqRfJ5S8zx62IySSq1B272pA1zvlQwWf3K53X7SUnXEz8Tx/pub?gid=1321919523&single=true&output=csv';
-const SHEET_EM_BREVE = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRdFR65NFzEvriBuuKOVrcEIrl4mjAlBSqRfJ5S8zx62IySSq1B272pA1zvlQwWf3K53X7SUnXEz8Tx/pub?gid=1898557010&single=true&output=csv';
-const WHATSAPP_NUMBER = '5511966204994';
+const SHEET_EM_BREVE = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRdFR65NFzEvriBuuKOVrcEIrl4mjAlBSqRfJ5S8zx62IySSq1B272pA1zvlQwWf3K53X7SUnXEz8Tx/pub?gid=186653163&single=true&output=csv';
+const WHATSAPP_NUMBER = '5511999999999';
 // ══════════════════════════════════════════════════════
 
 const DEMO = [
@@ -396,7 +396,7 @@ function cardHTML(p) {
   const specs=(p.abv&&p.abv!=='—')?`<div class="card-specs">${p.volume?`<span><strong>${p.volume}</strong> ml</span>`:''}<span><strong>${p.abv}%</strong> ABV</span>${p.ibu&&p.ibu!=='—'?`<span><strong>${p.ibu}</strong> IBU</span>`:''}</div>`:p.volume?`<div class="card-specs"><span><strong>${p.volume}</strong> ml</span></div>`:'';
   const styleRow=`<div class="card-style-row">${styleDot(color)}<span class="card-style">${p.estilo}</span></div>`;
   const brewery=p.cervejaria?`<div class="card-brewery">${p.cervejaria}</div>`:'';
-  return `<div class="card">${imgArea}<div class="card-body">${typeTag(p.tipo)}<div class="card-name">${p.nome}</div>${brewery}${styleRow}${specs}<div class="card-desc">${p.descricao}</div></div><div class="card-footer"><div><div class="card-price">R$ ${pr.toFixed(2).replace('.',',')}</div><div class="stock"><span class="sd ${cls}"></span>${label}</div></div><button class="add-btn" ${esg?'disabled':''} onclick="addToCart('${p.id}')">${esg?'Esgotado':'+ Add'}</button></div></div>`;
+  return `<div class="card">${imgArea}<div class="card-body">${typeTag(p.tipo)}<div class="card-name">${p.nome}</div>${brewery}${styleRow}${specs}<div class="card-desc">${p.descricao}</div></div><div class="card-footer"><div><div class="card-price">R$ ${pr.toFixed(2).replace('.',',')}</div><div class="stock"><span class="sd ${cls}"></span>${label}</div></div><div style="display:flex;align-items:center;gap:6px;position:relative">${esg?'':`<span id="card-badge-${p.id}" style="display:none;background:var(--amber);color:#fff;border-radius:50%;width:18px;height:18px;font-size:10px;font-weight:700;align-items:center;justify-content:center;flex-shrink:0">0</span>`}<button id="add-btn-${p.id}" class="add-btn" ${esg?'disabled':''} onclick="addToCart('${p.id}')">${esg?'Esgotado':'+ Add'}</button></div></div></div>`;
 }
 
 function renderSoon() {
@@ -411,7 +411,7 @@ function soonCardHTML(p) {
   const reg=localInterest[p.id]||0; const total=(parseInt(p.interessados_base)||0)+reg;
   const pr=parseFloat(p.preco)||0; const color=styleColor(p.estilo);
   const imgArea=p.foto_url
-    ? `<div class="soon-card-img"><div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center">${mugSVG(color)}</div><img src="${p.foto_url}" alt="${p.nome}" onload="this.classList.add('loaded')" onerror="this.style.display='none'" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:1;opacity:0;transition:opacity .35s"></div>`
+    ? `<div class="soon-card-img" style="position:relative"><div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center">${mugSVG(color)}</div><img src="${p.foto_url}" alt="${p.nome}" onload="this.style.opacity=1" onerror="this.style.display='none'" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:1;opacity:0;transition:opacity .35s"></div>`
     : `<div class="soon-card-img">${mugSVG(color)}</div>`;
   const styleRow=`<div class="card-style-row">${styleDot(color)}<span class="soon-card-style">${p.estilo}</span></div>`;
   return `<div class="soon-card">${imgArea}<div class="soon-overlay">Em breve</div><div class="soon-card-body"><div class="soon-card-name">${p.nome}</div>${styleRow}<div class="soon-card-desc">${p.descricao}</div><div class="soon-meta"><span>📅 <strong>${p.previsao}</strong></span>${p.quantidade?`<span>🍺 <strong>${p.quantidade} un.</strong></span>`:''}</div></div><div class="soon-card-footer"><div><div class="soon-price ${pr?'has':''}">${pr?'R$ '+pr.toFixed(2).replace('.',','):'A confirmar'}</div><div class="soon-interested" id="int-${p.id}"><span class="soon-interested-dot"></span>${total} ${total===1?'pessoa aguardando':'pessoas aguardando'}</div></div><button class="notify-btn" id="nbtn-${p.id}" onclick="openModal('${p.id}')">${reg>0?'✓ Registrado':'🔔 Avise-me'}</button></div></div>`;
@@ -431,8 +431,33 @@ function confirmNotify() {
   closeModal(); renderSoon(); showToast('Interesse registrado! Juninho vai te avisar 🔔');
 }
 
-function addToCart(id) { const p=allProducts.find(x=>x.id===id); if(!p) return; cart[id]=(cart[id]||0)+1; updateCount(); showToast(`${p.nome} adicionada! 🍺`); }
-function removeOne(id) { if(!cart[id]) return; cart[id]--; if(cart[id]<=0) delete cart[id]; renderDrawer(); }
+function addToCart(id) {
+  const p=allProducts.find(x=>x.id===id); if(!p) return;
+  cart[id]=(cart[id]||0)+1;
+  updateCount();
+  updateCardCounter(id);
+  if(Object.keys(cart).length && document.getElementById('drawer').classList.contains('open')) renderDrawer();
+  showToast(`${p.nome} adicionada! 🍺`);
+}
+function removeOne(id) {
+  if(!cart[id]) return;
+  cart[id]--; if(cart[id]<=0) delete cart[id];
+  updateCardCounter(id);
+  renderDrawer();
+}
+function updateCardCounter(id) {
+  const btn=document.getElementById(`add-btn-${id}`);
+  const badge=document.getElementById(`card-badge-${id}`);
+  if(!btn) return;
+  const qty=cart[id]||0;
+  if(qty>0){
+    btn.textContent='+ Add';
+    if(badge){ badge.textContent=qty; badge.style.display='flex'; }
+  } else {
+    btn.textContent='+ Add';
+    if(badge) badge.style.display='none';
+  }
+}
 function updateCount() { document.getElementById('cart-count').textContent=Object.values(cart).reduce((a,b)=>a+b,0); }
 function openCart() { renderDrawer(); document.getElementById('overlay').classList.add('open'); document.getElementById('drawer').classList.add('open'); }
 function closeCart() { document.getElementById('overlay').classList.remove('open'); document.getElementById('drawer').classList.remove('open'); }
