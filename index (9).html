@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cervejeira do Juninho</title>
+<style>
+:root {
+  --bg:      #0c0c0c;
+  --bg1:     #111111;
+  --bg2:     #161616;
+  --bg3:     #1e1e1e;
+  --bg4:     #2a2a2a;
+  --border:  #222222;
+  --border2: #2f2f2f;
+  --text:    #e8e5e0;
+  --text2:   #888780;
+  --text3:   #444441;
+  --amber:   #BA7517;
+  --amber-d: #633806;
+  --amber-l: #EF9F27;
+  --teal:    #1D9E75;
+  --purple:  #7F77DD;
+  --purple-d:#3C3489;
+  --r: 12px; --rs: 8px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+/* HEADER */
+header { background: var(--bg1); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100; }
+.header-inner { max-width: 1020px; margin: 0 auto; padding: 0 1rem; display: flex; align-items: center; justify-content: space-between; height: 62px; }
+.logo { display: flex; align-items: center; gap: 12px; text-decoration: none; }
+.logo-text { font-size: 16px; font-weight: 700; color: var(--text); line-height: 1.2; }
+.logo-sub { font-size: 11px; color: var(--text3); }
+.cart-btn { background: var(--amber); color: #fff; border: none; border-radius: var(--rs); padding: 9px 16px; font-size: 14px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 7px; }
+.cart-btn:hover { background: var(--amber-d); }
+.cart-count { background: #fff; color: var(--amber-d); border-radius: 50%; width: 20px; height: 20px; font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; }
+
+/* HERO */
+.hero { background: var(--bg2); border-bottom: 2px solid var(--amber); padding: 2rem 1rem 1.8rem; text-align: center; }
+.live-pill { display: inline-flex; align-items: center; gap: 6px; background: var(--bg3); border: 1px solid var(--border2); border-radius: 999px; padding: 4px 13px; font-size: 11px; color: var(--text2); margin-bottom: .9rem; }
+.live-dot { width: 7px; height: 7px; border-radius: 50%; background: #5DCAA5; animation: pulse 1.5s infinite; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
+.hero h1 { font-size: clamp(1.5rem, 4vw, 2.2rem); font-weight: 700; margin-bottom: .4rem; }
+.hero p { font-size: .95rem; color: var(--text2); max-width: 400px; margin: 0 auto; }
+
+/* MAIN */
+main { max-width: 1020px; margin: 0 auto; padding: 1.5rem 1rem 6rem; }
+
+/* SEARCH + FILTERS */
+.search-bar { position: relative; margin-bottom: 1rem; }
+.search-bar input { width: 100%; padding: 10px 14px 10px 38px; background: var(--bg1); border: 1px solid var(--border2); border-radius: var(--rs); font-size: 14px; color: var(--text); outline: none; }
+.search-bar input:focus { border-color: var(--amber); }
+.search-bar input::placeholder { color: var(--text3); }
+.search-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text3); font-size: 15px; pointer-events: none; }
+.filters { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 1.5rem; }
+.fbtn { border: 1px solid var(--border2); background: var(--bg1); border-radius: 999px; padding: 6px 14px; font-size: 12px; cursor: pointer; color: var(--text2); transition: all .15s; }
+.fbtn:hover { border-color: var(--amber); color: var(--amber); }
+.fbtn.active { background: var(--amber); border-color: var(--amber); color: #fff; }
+.section-label { font-size: 11px; font-weight: 600; letter-spacing: .8px; text-transform: uppercase; color: var(--text3); margin-bottom: 1rem; }
+
+/* GRID */
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(175px, 1fr)); gap: 10px; }
+
+/* CARD */
+.card { background: var(--bg1); border: 1px solid var(--border); border-radius: var(--r); overflow: hidden; display: flex; flex-direction: column; transition: border-color .15s, transform .15s; }
+.card:hover { border-color: var(--amber); transform: translateY(-2px); }
+
+/* área da imagem — janela da geladeira */
+.card-img { width: 100%; aspect-ratio: 2/3; background: var(--bg2); position: relative; overflow: hidden; flex-shrink: 0; display: flex; align-items: center; justify-content: center; border-bottom: 1px solid var(--border); }
+.card-img img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity .35s; z-index: 1; }
+.card-img img.loaded { opacity: 1; }
+.card-img .fallback { display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; }
+/* luz fria no topo */
+.card-img::after { content:''; position:absolute; top:0; left:0; right:0; height:28px; background:linear-gradient(to bottom,rgba(160,210,255,.07),transparent); z-index:2; pointer-events:none; }
+/* reflexo do vidro */
+.card-img::before { content:''; position:absolute; top:0; left:12px; bottom:0; width:2px; background:linear-gradient(to bottom,rgba(255,255,255,.06),transparent); z-index:2; pointer-events:none; }
+
+.card-body { padding: .75rem .8rem; flex: 1; display: flex; flex-direction: column; gap: 5px; }
+.tag { font-size: 9px; font-weight: 700; padding: 2px 7px; border-radius: 999px; text-transform: uppercase; display: inline-block; margin-bottom: 2px; }
+.tag-alphahops  { background: #0d1a1f; color: #5DCAA5; }
+.tag-revenda    { background: #1f1200; color: var(--amber-l); }
+.tag-combo      { background: #0f0d1e; color: var(--purple); }
+.card-name  { font-size: 13px; font-weight: 600; line-height: 1.3; }
+.card-style { font-size: 11px; color: var(--text3); }
+.card-brewery { font-size: 11px; color: var(--text2); font-weight: 500; margin-bottom: 1px; }
+.card-style-row { display: flex; align-items: flex-start; gap: 6px; }
+.soon-card-style { font-size: 11px; color: var(--text3); }
+
+/* ── MOBILE ── */
+@media (max-width: 480px) {
+  .header-inner { height: 56px; }
+  .logo-text { font-size: 14px; }
+  .cart-btn { padding: 8px 12px; font-size: 13px; }
+  .hero { padding: 1.5rem 1rem 1.4rem; }
+  .hero h1 { font-size: 1.4rem; }
+  .hero p { font-size: .85rem; }
+  main { padding: 1rem .75rem 5rem; }
+  .grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+  .card-body { padding: .6rem .65rem; gap: 4px; }
+  .card-footer { padding: .55rem .65rem; }
+  .card-name { font-size: 12px; }
+  .card-price { font-size: 14px; }
+  .add-btn { padding: 6px 10px; font-size: 11px; }
+  .filters { gap: 6px; }
+  .fbtn { padding: 5px 11px; font-size: 11px; }
+  .soon-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+  .soon-card-body { padding: .6rem .65rem; }
+  .soon-card-footer { padding: .55rem .65rem; flex-direction: column; align-items: flex-start; gap: 8px; }
+  .notify-btn { width: 100%; text-align: center; padding: 8px; }
+  .drawer { width: 100vw; }
+  .cart-item-name { font-size: 12px; }
+}
+.card-specs { font-size: 10px; color: var(--text3); display: flex; gap: 8px; }
+.card-specs strong { color: var(--text2); }
+.card-desc  { font-size: 11px; color: var(--text3); line-height: 1.5; flex: 1; }
+
+.card-footer { padding: .65rem .8rem; border-top: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; gap: 6px; }
+.card-price { font-size: 15px; font-weight: 700; color: var(--amber); }
+.stock { font-size: 10px; color: var(--text3); display: flex; align-items: center; gap: 4px; }
+.sd { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+.s-ok { background: var(--teal); } .s-low { background: var(--amber-l); } .s-out { background: #444; }
+.add-btn { background: var(--bg3); color: var(--text2); border: 1px solid var(--border2); border-radius: var(--rs); padding: 6px 12px; font-size: 12px; font-weight: 500; cursor: pointer; white-space: nowrap; }
+.add-btn:hover:not(:disabled) { background: var(--amber); color: #fff; border-color: var(--amber); }
+.add-btn:disabled { opacity: .3; cursor: not-allowed; }
+
+/* EM BREVE */
+.soon-section { margin-top: 3rem; padding-top: 2.5rem; border-top: 1px solid var(--border); }
+.soon-header { display: flex; align-items: center; gap: 10px; margin-bottom: .3rem; }
+.soon-badge { background: #0f0d1e; color: var(--purple); font-size: 10px; font-weight: 700; letter-spacing: .5px; text-transform: uppercase; padding: 3px 10px; border-radius: 999px; border: 1px solid #2a2660; }
+.soon-title { font-size: 17px; font-weight: 700; }
+.soon-sub { font-size: 13px; color: var(--text2); margin-bottom: 1.25rem; }
+.soon-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1rem; }
+
+.soon-card { background: var(--bg1); border: 1px solid var(--border); border-radius: var(--r); overflow: hidden; display: flex; flex-direction: column; position: relative; }
+.soon-card-img { width: 100%; aspect-ratio: 2/3; background: var(--bg2); display: flex; align-items: center; justify-content: center; overflow: hidden; position: relative; flex-shrink: 0; border-bottom: 1px solid var(--border); filter: saturate(.45) brightness(.65); }
+.soon-card-img img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity .35s; z-index: 1; }
+.soon-card-img img.loaded { opacity: 1; }
+.soon-overlay { position: absolute; top: 10px; left: 10px; background: var(--purple-d); color: #CECBF6; font-size: 9px; font-weight: 700; letter-spacing: .4px; text-transform: uppercase; padding: 3px 9px; border-radius: 999px; z-index: 3; }
+.soon-card-body { padding: .8rem .85rem; flex: 1; display: flex; flex-direction: column; gap: 5px; }
+.soon-card-name  { font-size: 13px; font-weight: 600; }
+.soon-card-style { font-size: 11px; color: var(--text3); }
+.soon-card-desc  { font-size: 11px; color: var(--text3); line-height: 1.5; flex: 1; }
+.soon-meta { display: flex; flex-wrap: wrap; gap: 8px; font-size: 10px; color: var(--text3); margin-top: 2px; }
+.soon-meta strong { color: var(--text2); }
+.soon-card-footer { padding: .65rem .85rem; border-top: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; gap: 6px; }
+.soon-price { font-size: 13px; font-weight: 700; color: var(--text3); }
+.soon-price.has { color: var(--amber); }
+.soon-interested { font-size: 10px; color: var(--purple); display: flex; align-items: center; gap: 4px; margin-top: 2px; }
+.soon-interested-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--purple); }
+.notify-btn { background: var(--purple-d); color: #CECBF6; border: 1px solid #2a2660; border-radius: var(--rs); padding: 6px 12px; font-size: 12px; font-weight: 500; cursor: pointer; white-space: nowrap; }
+.notify-btn:hover { background: var(--purple); color: #fff; }
+
+/* EMPTY */
+.empty { text-align: center; padding: 3rem 1rem; color: var(--text3); font-size: 14px; grid-column: 1/-1; }
+
+/* CART OVERLAY + DRAWER */
+.overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.6); z-index: 200; }
+.overlay.open { display: block; }
+.drawer { position: fixed; right: 0; top: 0; bottom: 0; width: min(380px,100vw); background: var(--bg1); border-left: 1px solid var(--border); z-index: 201; display: flex; flex-direction: column; transform: translateX(100%); transition: transform .25s ease; }
+.drawer.open { transform: translateX(0); }
+.drawer-header { padding: 1.2rem 1rem; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+.drawer-header h2 { font-size: 16px; font-weight: 600; }
+.close-btn { background: none; border: none; font-size: 20px; cursor: pointer; color: var(--text2); line-height: 1; }
+.drawer-items { flex: 1; overflow-y: auto; padding: 1rem; display: flex; flex-direction: column; gap: 10px; }
+.cart-item { display: flex; align-items: center; gap: 10px; padding: 10px; background: var(--bg2); border: 1px solid var(--border); border-radius: var(--rs); }
+.cart-thumb { width: 44px; height: 56px; border-radius: 6px; background: var(--bg3); flex-shrink: 0; overflow: hidden; display: flex; align-items: center; justify-content: center; font-size: 20px; }
+.cart-thumb img { width: 100%; height: 100%; object-fit: cover; }
+.cart-item-info { flex: 1; min-width: 0; }
+.cart-item-name  { font-size: 13px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cart-item-price { font-size: 12px; color: var(--text2); }
+.qty-ctrl { display: flex; align-items: center; gap: 6px; }
+.qty-btn { width: 26px; height: 26px; background: var(--bg3); border: 1px solid var(--border2); border-radius: 6px; cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center; color: var(--text); }
+.qty-btn:hover { background: var(--bg4); }
+.qty-val { font-size: 14px; font-weight: 600; min-width: 18px; text-align: center; }
+.drawer-empty { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--text3); gap: 8px; font-size: 14px; }
+.drawer-footer { padding: 1rem; border-top: 1px solid var(--border); }
+.cart-total { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+.cart-total span { font-size: 14px; color: var(--text2); }
+.cart-total strong { font-size: 20px; color: var(--amber); }
+.whatsapp-btn { width: 100%; background: #25D366; color: #fff; border: none; border-radius: var(--rs); padding: 13px; font-size: 15px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; }
+.whatsapp-btn:hover { background: #1ebe5b; }
+
+/* MODAL */
+.modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.65); z-index: 300; align-items: center; justify-content: center; padding: 1rem; }
+.modal-overlay.open { display: flex; }
+.modal { background: var(--bg1); border: 1px solid var(--border2); border-radius: var(--r); width: 100%; max-width: 400px; padding: 1.5rem; display: flex; flex-direction: column; gap: 14px; }
+.modal-title { font-size: 16px; font-weight: 600; }
+.modal-sub   { font-size: 13px; color: var(--text2); line-height: 1.5; margin-top: 3px; }
+.modal-beer  { background: #1f1200; color: var(--amber-l); font-size: 13px; font-weight: 600; padding: 7px 12px; border-radius: var(--rs); }
+.modal label { font-size: 13px; font-weight: 500; display: block; margin-bottom: 5px; }
+.modal input { width: 100%; padding: 9px 12px; background: var(--bg2); border: 1px solid var(--border2); border-radius: var(--rs); font-size: 14px; color: var(--text); outline: none; }
+.modal input:focus { border-color: var(--purple); }
+.modal-actions { display: flex; gap: 8px; }
+.modal-cancel  { flex: 1; padding: 10px; border: 1px solid var(--border2); background: var(--bg2); border-radius: var(--rs); font-size: 14px; cursor: pointer; color: var(--text2); }
+.modal-cancel:hover { background: var(--bg3); }
+.modal-confirm { flex: 2; padding: 10px; background: #25D366; color: #fff; border: none; border-radius: var(--rs); font-size: 14px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; }
+.modal-confirm:hover { background: #1ebe5b; }
+
+/* TOAST */
+.toast { position: fixed; bottom: 1.5rem; left: 50%; transform: translateX(-50%) translateY(80px); background: var(--bg4); color: var(--text); border: 1px solid var(--border2); padding: 10px 18px; border-radius: 999px; font-size: 13px; z-index: 400; transition: transform .25s ease; white-space: nowrap; }
+.toast.show { transform: translateX(-50%) translateY(0); }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <a class="logo" href="#">
+      <svg width="38" height="50" viewBox="0 0 38 50" xmlns="http://www.w3.org/2000/svg">
+        <rect x="1" y="1" width="36" height="48" rx="5" fill="#1a1a1a" stroke="#2a2a2a" stroke-width="1"/>
+        <rect x="1" y="1" width="36" height="14" rx="5" fill="#222" stroke="#2a2a2a" stroke-width=".5"/>
+        <rect x="1" y="12" width="36" height="3" fill="#1a1a1a"/>
+        <rect x="4" y="16" width="30" height="31" rx="3" fill="#0a0a0a" stroke="#2f2f2f" stroke-width=".8"/>
+        <rect x="4" y="16" width="30" height="5" fill="#b8daff" opacity=".07"/>
+        <line x1="7" y1="17" x2="5" y2="46" stroke="#fff" stroke-width="1.5" stroke-opacity=".04"/>
+        <rect x="4" y="30" width="30" height="1.5" rx=".75" fill="#1e1e1e"/>
+        <rect x="7"  y="19" width="5" height="10" rx="1.5" fill="#EF9F27" opacity=".9"/>
+        <rect x="14" y="19" width="5" height="10" rx="1.5" fill="#5DCAA5" opacity=".9"/>
+        <rect x="21" y="19" width="5" height="10" rx="1.5" fill="#AFA9EC" opacity=".9"/>
+        <rect x="28" y="19" width="5" height="10" rx="1.5" fill="#F09595" opacity=".85"/>
+        <rect x="7"  y="32" width="5" height="11" rx="1.5" fill="#5DCAA5" opacity=".85"/>
+        <rect x="14" y="32" width="5" height="11" rx="1.5" fill="#EF9F27" opacity=".9"/>
+        <rect x="21" y="32" width="5" height="11" rx="1.5" fill="#633806" opacity=".9"/>
+        <rect x="28" y="32" width="5" height="11" rx="1.5" fill="#AFA9EC" opacity=".8"/>
+        <rect x="36" y="22" width="1.5" height="10" rx=".75" fill="#2a2a2a"/>
+      </svg>
+      <div>
+        <div class="logo-text">Cervejeira do Juninho</div>
+        <div class="logo-sub">Osasco, SP</div>
+      </div>
+    </a>
+    <button class="cart-btn" onclick="openCart()">
+      🛒 Carrinho
+      <span class="cart-count" id="cart-count">0</span>
+    </button>
+  </div>
+</header>
+
+<div class="hero">
+  <div class="live-pill"><span class="live-dot"></span> atualizado em tempo real</div>
+  <h1>O que tem na geladeira hoje?</h1>
+  <p>Cervejas artesanais e selecionadas, geladas e prontas pra você.</p>
+</div>
+
+<main>
+  <div class="search-bar">
+    <span class="search-icon">🔍</span>
+    <input type="text" id="search" placeholder="Buscar cerveja, estilo..." oninput="renderCatalog()">
+  </div>
+  <div class="filters">
+    <button class="fbtn active" onclick="setFilter('todos',this)">Todos</button>
+    <button class="fbtn" onclick="setFilter('alphahops',this)">⚗️ Alphahops</button>
+    <button class="fbtn" onclick="setFilter('revenda',this)">🏪 Revenda</button>
+    <button class="fbtn" onclick="setFilter('combo',this)">🎁 Combos</button>
+  </div>
+  <p class="section-label" id="section-label">Carregando...</p>
+  <div class="grid" id="grid"><div class="empty">Carregando a cervejeira... 🍺</div></div>
+
+  <div class="soon-section" id="soon-section" style="display:none">
+    <div class="soon-header">
+      <span class="soon-badge">Em breve</span>
+      <h2 class="soon-title">Chegando na cervejeira</h2>
+    </div>
+    <p class="soon-sub">Registre seu interesse e seja o primeiro a saber quando chegar.</p>
+    <div class="soon-grid" id="soon-grid"></div>
+  </div>
+</main>
+
+<div class="overlay" id="overlay" onclick="closeCart()"></div>
+
+<div class="drawer" id="drawer">
+  <div class="drawer-header">
+    <h2>Seu pedido</h2>
+    <button class="close-btn" onclick="closeCart()">✕</button>
+  </div>
+  <div class="drawer-items" id="drawer-items"></div>
+  <div class="drawer-footer" id="drawer-footer" style="display:none">
+    <div class="cart-total"><span>Total</span><strong id="cart-total">R$ 0,00</strong></div>
+    <button class="whatsapp-btn" onclick="sendWhatsApp()">💬 Pedir pelo WhatsApp</button>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-overlay" onclick="closeModalOutside(event)">
+  <div class="modal">
+    <div>
+      <div style="display:flex;justify-content:space-between;align-items:flex-start">
+        <div class="modal-title">Quero ser avisado! 🔔</div>
+        <button class="close-btn" onclick="closeModal()">✕</button>
+      </div>
+      <div class="modal-sub">Juninho te manda mensagem assim que essa cerveja chegar.</div>
+    </div>
+    <div class="modal-beer" id="modal-beer-name">—</div>
+    <div><label for="modal-nome">Seu nome</label><input type="text" id="modal-nome" placeholder="Como você se chama?"></div>
+    <div><label for="modal-wpp">WhatsApp</label><input type="tel" id="modal-wpp" placeholder="(11) 99999-9999"></div>
+    <div class="modal-actions">
+      <button class="modal-cancel" onclick="closeModal()">Cancelar</button>
+      <button class="modal-confirm" onclick="confirmNotify()">💬 Registrar via WhatsApp</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ══════════════════════════════════════════════════════
+//  CONFIGURAÇÃO — edite apenas este bloco
+// ══════════════════════════════════════════════════════
+const SHEET_CATALOGO = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRdFR65NFzEvriBuuKOVrcEIrl4mjAlBSqRfJ5S8zx62IySSq1B272pA1zvlQwWf3K53X7SUnXEz8Tx/pub?gid=1321919523&single=true&output=csv';
+const SHEET_EM_BREVE = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRdFR65NFzEvriBuuKOVrcEIrl4mjAlBSqRfJ5S8zx62IySSq1B272pA1zvlQwWf3K53X7SUnXEz8Tx/pub?gid=186653163&single=true&output=csv';
+const WHATSAPP_NUMBER = '5511999999999';
+// ══════════════════════════════════════════════════════
+
+const DEMO = [
+  { id:'001', nome:'Stout do Juninho',   estilo:'Imperial Stout',  cervejaria:'Alphahops', volume:'500', descricao:'Escura, encorpada, com notas de café e chocolate amargo. A favorita dos amigos.',      abv:'9.2',  ibu:'45', preco:'28', estoque:'8',  tipo:'alphahops', foto_url:'https://res.cloudinary.com/kdois/image/upload/v1774656956/blackheart_brewdog_b2712a.jpg' },
+  { id:'002', nome:'Witbier da Estação', estilo:'Belgian Witbier', cervejaria:'Alphahops', volume:'500', descricao:'Leve e refrescante, com coentro e casca de laranja. Perfeita para o verão paulista.',  abv:'4.8',  ibu:'15', preco:'18', estoque:'14', tipo:'alphahops', foto_url:'' },
+  { id:'003', nome:'IPA Tropical',       estilo:'New England IPA', cervejaria:'Alphahops', volume:'500', descricao:'Lúpulos tropicais. Manga, maracujá e pitaia no aroma.',                               abv:'6.5',  ibu:'55', preco:'22', estoque:'2',  tipo:'alphahops', foto_url:'' },
+  { id:'004', nome:'Session IPA',        estilo:'Session IPA',     cervejaria:'Alphahops', volume:'500', descricao:'Toda a vibe do lúpulo com pouco álcool. Fácil de beber, difícil de parar.',           abv:'3.8',  ibu:'40', preco:'16', estoque:'0',  tipo:'alphahops', foto_url:'' },
+  { id:'005', nome:'Colorado Appia',     estilo:'Ale',             cervejaria:'Colorado',  volume:'600', descricao:'Cerveja brasileira com quinoa, mel e erva-cidreira. Cervejaria Colorado.',             abv:'5.0',  ibu:'22', preco:'15', estoque:'20', tipo:'revenda',   foto_url:'' },
+  { id:'006', nome:'Wäls Petroleum',     estilo:'Imperial Stout',  cervejaria:'Wäls',      volume:'500', descricao:'Uma das mais premiadas do Brasil. Café, alcaçuz e notas de bourbon.',                 abv:'10.5', ibu:'60', preco:'35', estoque:'6',  tipo:'revenda',   foto_url:'' },
+  { id:'007', nome:'Combo Escuras',      estilo:'Kit 3 cervejas',  cervejaria:'',          volume:'',    descricao:'Stout do Juninho + Wäls Petroleum + surpresa da geladeira. Ideal para presentear.',   abv:'—',    ibu:'—',  preco:'75', estoque:'3',  tipo:'combo',     foto_url:'' },
+  { id:'008', nome:'Combo Refrescante',  estilo:'Kit 4 cervejas',  cervejaria:'',          volume:'',    descricao:'Witbier + Session IPA + 2 surpresas geladas. Ótimo para o churras.',                  abv:'—',    ibu:'—',  preco:'65', estoque:'5',  tipo:'combo',     foto_url:'' },
+];
+
+const DEMO_SOON = [
+  { id:'s001', nome:'Baltic Porter Aged', estilo:'Baltic Porter',         descricao:'Maturada 3 meses em barril de carvalho. Ameixa, baunilha e final aveludado.',    abv:'8.4', ibu:'30', preco:'34', previsao:'Abril 2025',  quantidade:'24', interessados_base:'7',  foto_url:'' },
+  { id:'s002', nome:'Saison do Cerrado',  estilo:'Saison',                descricao:'Especiarias do Cerrado: baru, pequi e cumaru. Uma cerveja genuinamente brasileira.',abv:'6.2', ibu:'25', preco:'',   previsao:'Maio 2025',   quantidade:'36', interessados_base:'4',  foto_url:'' },
+  { id:'s003', nome:'Imperial Red Ale',   estilo:'American Imperial Red', descricao:'Maltes caramelizados e lúpulos intensos. Encorpada e complexa.',                  abv:'9.0', ibu:'70', preco:'30', previsao:'Junho 2025',  quantidade:'48', interessados_base:'11', foto_url:'' },
+];
+
+const STYLE_COLORS = { 'stout':'#3d1f08','porter':'#4a2810','ipa':'#EF9F27','session ipa':'#FAC775','witbier':'#5DCAA5','ale':'#1D9E75','saison':'#97C459','red':'#D85A30','kit':'#7F77DD','combo':'#7F77DD','_default':'#BA7517' };
+function styleColor(e){ const s=(e||'').toLowerCase(); for(const[k,v] of Object.entries(STYLE_COLORS)) if(s.includes(k)) return v; return STYLE_COLORS._default; }
+function styleDot(color){ return `<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${color};flex-shrink:0;margin-top:3px"></span>`; }
+
+function mugSVG(color) {
+  return `<svg width="90" height="90" viewBox="0 0 96 108" xmlns="http://www.w3.org/2000/svg">
+    <path d="M16 28 L12 88 L72 88 L68 28 Z" fill="${color}" opacity=".95"/>
+    <ellipse cx="42" cy="28" rx="26" ry="8" fill="#ffffff" opacity=".9"/>
+    <ellipse cx="30" cy="26" rx="9" ry="6" fill="#ffffff" opacity=".75"/>
+    <ellipse cx="54" cy="25" rx="8" ry="6" fill="#ffffff" opacity=".75"/>
+    <ellipse cx="42" cy="22" rx="12" ry="6" fill="#ffffff" opacity=".65"/>
+    <path d="M68 38 Q86 38 86 55 Q86 72 68 72" fill="none" stroke="${color}" stroke-width="9" stroke-linecap="round" opacity=".9"/>
+    <path d="M22 36 L18 78" stroke="#fff" stroke-width="5" stroke-linecap="round" opacity=".07"/>
+    <rect x="12" y="84" width="60" height="7" rx="3" fill="${color}" opacity=".65"/>
+  </svg>`;
+}
+
+let allProducts=[], soonProducts=[], cart={}, localInterest={}, activeFilter='todos', modalTargetId=null;
+
+async function init() {
+  const [cat, soon] = await Promise.all([fetchCSV(SHEET_CATALOGO,DEMO), fetchCSV(SHEET_EM_BREVE,DEMO_SOON)]);
+  allProducts=cat; soonProducts=soon;
+  renderCatalog(); renderSoon();
+}
+
+async function fetchCSV(url, fallback) {
+  try { const r=await fetch(url); if(!r.ok) throw 0; return parseCSV(await r.text()); }
+  catch { return fallback; }
+}
+
+function parseCSV(text) {
+  const lines=text.trim().split('\n');
+  const headers=lines[0].split(',').map(h=>h.trim().replace(/"/g,''));
+  return lines.slice(1).map(line=>{
+    const vals=[]; let cur='',inQ=false;
+    for(const ch of line+',') { if(ch==='"'){inQ=!inQ;} else if(ch===','&&!inQ){vals.push(cur.trim());cur='';} else cur+=ch; }
+    const obj={}; headers.forEach((h,i)=>obj[h]=(vals[i]||'').replace(/"/g,'').trim()); return obj;
+  }).filter(p=>p.nome);
+}
+
+function setFilter(tipo,btn) { activeFilter=tipo; document.querySelectorAll('.fbtn').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); renderCatalog(); }
+
+function renderCatalog() {
+  const q=document.getElementById('search').value.toLowerCase();
+  const f=allProducts.filter(p=>(activeFilter==='todos'||p.tipo===activeFilter)&&(!q||p.nome.toLowerCase().includes(q)||(p.estilo||'').toLowerCase().includes(q)||(p.descricao||'').toLowerCase().includes(q)));
+  document.getElementById('section-label').textContent=`${f.length} ${f.length===1?'item disponível':'itens disponíveis'}`;
+  const g=document.getElementById('grid');
+  g.innerHTML=f.length ? f.map(cardHTML).join('') : `<div class="empty">Nenhuma cerveja encontrada. 🔍</div>`;
+  g.querySelectorAll('img[data-src]').forEach(lazyLoad);
+}
+
+function stockInfo(n) { n=parseInt(n)||0; if(n===0) return{cls:'s-out',label:'Esgotado'}; if(n<=3) return{cls:'s-low',label:`Últimas ${n}`}; return{cls:'s-ok',label:`${n} disponíveis`}; }
+
+function typeTag(t) {
+  const m={alphahops:['tag-alphahops','⚗️ Alphahops'],revenda:['tag-revenda','🏪 Revenda'],combo:['tag-combo','🎁 Combo']};
+  const[cls,lbl]=m[t]||['tag-alphahops',t]; return `<span class="tag ${cls}">${lbl}</span>`;
+}
+
+function cardHTML(p) {
+  const{cls,label}=stockInfo(p.estoque); const esg=parseInt(p.estoque)===0;
+  const pr=parseFloat(p.preco)||0; const color=styleColor(p.estilo);
+  const imgArea=p.foto_url
+    ? `<div class="card-img"><div class="fallback">${mugSVG(color)}</div><img src="${p.foto_url}" alt="${p.nome}" onload="this.classList.add('loaded')" onerror="this.style.display='none'"></div>`
+    : `<div class="card-img"><div class="fallback">${mugSVG(color)}</div></div>`;
+  const specs=(p.abv&&p.abv!=='—')?`<div class="card-specs">${p.volume?`<span><strong>${p.volume}</strong> ml</span>`:''}<span><strong>${p.abv}%</strong> ABV</span>${p.ibu&&p.ibu!=='—'?`<span><strong>${p.ibu}</strong> IBU</span>`:''}</div>`:p.volume?`<div class="card-specs"><span><strong>${p.volume}</strong> ml</span></div>`:'';
+  const styleRow=`<div class="card-style-row">${styleDot(color)}<span class="card-style">${p.estilo}</span></div>`;
+  const brewery=p.cervejaria?`<div class="card-brewery">${p.cervejaria}</div>`:'';
+  return `<div class="card">${imgArea}<div class="card-body">${typeTag(p.tipo)}<div class="card-name">${p.nome}</div>${brewery}${styleRow}${specs}<div class="card-desc">${p.descricao}</div></div><div class="card-footer"><div><div class="card-price">R$ ${pr.toFixed(2).replace('.',',')}</div><div class="stock"><span class="sd ${cls}"></span>${label}</div></div><button class="add-btn" ${esg?'disabled':''} onclick="addToCart('${p.id}')">${esg?'Esgotado':'+ Add'}</button></div></div>`;
+}
+
+function renderSoon() {
+  if(!soonProducts.length) return;
+  document.getElementById('soon-section').style.display='block';
+  const g=document.getElementById('soon-grid');
+  g.innerHTML=soonProducts.map(soonCardHTML).join('');
+  g.querySelectorAll('img[data-src]').forEach(lazyLoad);
+}
+
+function soonCardHTML(p) {
+  const reg=localInterest[p.id]||0; const total=(parseInt(p.interessados_base)||0)+reg;
+  const pr=parseFloat(p.preco)||0; const color=styleColor(p.estilo);
+  const imgArea=p.foto_url
+    ? `<div class="soon-card-img"><div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center">${mugSVG(color)}</div><img src="${p.foto_url}" alt="${p.nome}" onload="this.classList.add('loaded')" onerror="this.style.display='none'" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:1;opacity:0;transition:opacity .35s"></div>`
+    : `<div class="soon-card-img">${mugSVG(color)}</div>`;
+  const styleRow=`<div class="card-style-row">${styleDot(color)}<span class="soon-card-style">${p.estilo}</span></div>`;
+  return `<div class="soon-card">${imgArea}<div class="soon-overlay">Em breve</div><div class="soon-card-body"><div class="soon-card-name">${p.nome}</div>${styleRow}<div class="soon-card-desc">${p.descricao}</div><div class="soon-meta"><span>📅 <strong>${p.previsao}</strong></span>${p.quantidade?`<span>🍺 <strong>${p.quantidade} un.</strong></span>`:''}</div></div><div class="soon-card-footer"><div><div class="soon-price ${pr?'has':''}">${pr?'R$ '+pr.toFixed(2).replace('.',','):'A confirmar'}</div><div class="soon-interested" id="int-${p.id}"><span class="soon-interested-dot"></span>${total} ${total===1?'pessoa aguardando':'pessoas aguardando'}</div></div><button class="notify-btn" id="nbtn-${p.id}" onclick="openModal('${p.id}')">${reg>0?'✓ Registrado':'🔔 Avise-me'}</button></div></div>`;
+}
+
+function openModal(id) { modalTargetId=id; const p=soonProducts.find(x=>x.id===id); document.getElementById('modal-beer-name').textContent=`🍺 ${p.nome} — ${p.estilo}`; document.getElementById('modal-nome').value=''; document.getElementById('modal-wpp').value=''; document.getElementById('modal-overlay').classList.add('open'); }
+function closeModal() { document.getElementById('modal-overlay').classList.remove('open'); modalTargetId=null; }
+function closeModalOutside(e) { if(e.target===document.getElementById('modal-overlay')) closeModal(); }
+
+function confirmNotify() {
+  const nome=document.getElementById('modal-nome').value.trim(), wpp=document.getElementById('modal-wpp').value.trim();
+  if(!nome){document.getElementById('modal-nome').focus();return;} if(!wpp){document.getElementById('modal-wpp').focus();return;}
+  const p=soonProducts.find(x=>x.id===modalTargetId); if(!p) return;
+  localInterest[modalTargetId]=(localInterest[modalTargetId]||0)+1;
+  const msg=encodeURIComponent([`🔔 *Interesse em pré-venda — Cervejeira do Juninho*`,``,`Cerveja: *${p.nome}* (${p.estilo})`,`Previsão: ${p.previsao}`,``,`Nome: ${nome}`,`WhatsApp: ${wpp}`,``,`Me avisa quando chegar! 😄`].join('\n'));
+  window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${msg}`,'_blank');
+  closeModal(); renderSoon(); showToast('Interesse registrado! Juninho vai te avisar 🔔');
+}
+
+function addToCart(id) { const p=allProducts.find(x=>x.id===id); if(!p) return; cart[id]=(cart[id]||0)+1; updateCount(); showToast(`${p.nome} adicionada! 🍺`); }
+function removeOne(id) { if(!cart[id]) return; cart[id]--; if(cart[id]<=0) delete cart[id]; renderDrawer(); }
+function updateCount() { document.getElementById('cart-count').textContent=Object.values(cart).reduce((a,b)=>a+b,0); }
+function openCart() { renderDrawer(); document.getElementById('overlay').classList.add('open'); document.getElementById('drawer').classList.add('open'); }
+function closeCart() { document.getElementById('overlay').classList.remove('open'); document.getElementById('drawer').classList.remove('open'); }
+
+function renderDrawer() {
+  const items=document.getElementById('drawer-items'), footer=document.getElementById('drawer-footer'), ids=Object.keys(cart);
+  if(!ids.length){items.innerHTML=`<div class="drawer-empty"><span style="font-size:36px">🍺</span>Seu carrinho está vazio.</div>`;footer.style.display='none';return;}
+  let total=0;
+  items.innerHTML=ids.map(id=>{
+    const p=allProducts.find(x=>x.id===id); if(!p) return ''; const qty=cart[id],pr=parseFloat(p.preco)||0; total+=pr*qty;
+    const thumb=p.foto_url?`<div class="cart-thumb"><img src="${p.foto_url}" alt="${p.nome}" onerror="this.parentElement.innerHTML='🍺'"></div>`:`<div class="cart-thumb">🍺</div>`;
+    return `<div class="cart-item">${thumb}<div class="cart-item-info"><div class="cart-item-name">${p.nome}</div><div class="cart-item-price">R$ ${pr.toFixed(2).replace('.',',')} cada</div></div><div class="qty-ctrl"><button class="qty-btn" onclick="removeOne('${id}')">−</button><span class="qty-val">${qty}</span><button class="qty-btn" onclick="addToCart('${id}')">+</button></div></div>`;
+  }).join('');
+  document.getElementById('cart-total').textContent=`R$ ${total.toFixed(2).replace('.',',')}`;
+  footer.style.display='block'; updateCount();
+}
+
+function sendWhatsApp() {
+  const ids=Object.keys(cart); if(!ids.length) return;
+  let total=0; const lines=['🍺 *Pedido — Cervejeira do Juninho*',''];
+  ids.forEach(id=>{const p=allProducts.find(x=>x.id===id);if(!p)return;const qty=cart[id],pr=parseFloat(p.preco)||0,sub=pr*qty;total+=sub;lines.push(`▸ ${p.nome} x${qty} — R$ ${sub.toFixed(2).replace('.',',')}`)});
+  lines.push('',`*Total: R$ ${total.toFixed(2).replace('.',',')}*`,'','Confirma o pedido? 😄');
+  window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(lines.join('\n'))}`,'_blank');
+}
+
+function lazyLoad(img) { const s=img.dataset.src; if(!s) return; img.src=s; }
+
+function showToast(msg) { const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2200); }
+
+init();
+</script>
+</body>
+</html>
