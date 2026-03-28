@@ -183,16 +183,17 @@ main { max-width: 1020px; margin: 0 auto; padding: 1.5rem 1rem 6rem; }
 .whatsapp-btn:hover { background: #1ebe5b; }
 
 /* MODAL DETALHES */
-.detail-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.7); z-index: 300; align-items: flex-end; justify-content: center; }
+.detail-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.7); z-index: 250; align-items: flex-end; justify-content: center; padding: 0; }
 .detail-overlay.open { display: flex; }
-@media(min-width:600px){ .detail-overlay { align-items: center; } }
+@media(min-width:600px){ .detail-overlay { align-items: center; padding: 1rem; } }
 .detail-modal {
   background: var(--bg1); border: 1px solid var(--border2);
   border-radius: var(--r) var(--r) 0 0;
-  width: 100%; max-width: 560px; max-height: 90vh;
+  width: 100%; max-width: 560px; max-height: 92vh;
   display: flex; flex-direction: column; overflow: hidden;
+  position: relative;
 }
-@media(min-width:600px){ .detail-modal { border-radius: var(--r); } }
+@media(min-width:600px){ .detail-modal { border-radius: var(--r); max-height: 85vh; } }
 .detail-img {
   width: 100%; height: 220px; flex-shrink: 0;
   background: var(--bg2); position: relative; overflow: hidden;
@@ -498,10 +499,7 @@ function openDetail(id) {
 
   const imgEl = document.getElementById('detail-img');
   imgEl.style.background = color + '22';
-  const existing = imgEl.querySelector('img');
-  if (existing) existing.remove();
-  const fallbackEl = imgEl.querySelector('.detail-fallback');
-  if (fallbackEl) fallbackEl.remove();
+  imgEl.querySelectorAll('img,.detail-fallback').forEach(el=>el.remove());
   if (p.foto_url) {
     const img = document.createElement('img');
     img.src = p.foto_url; img.alt = p.nome;
@@ -509,23 +507,23 @@ function openDetail(id) {
   } else {
     const fb = document.createElement('div');
     fb.className = 'detail-fallback';
-    fb.innerHTML = mugSVG(color);
     fb.style.cssText = 'display:flex;align-items:center;justify-content:center;width:100%;height:100%';
+    fb.innerHTML = mugSVG(color);
     imgEl.appendChild(fb);
   }
 
-  const specs = [
+  const specsHTML = [
     p.volume ? `<div class="detail-spec"><strong>${p.volume}</strong>ml</div>` : '',
-    p.abv && p.abv !== '—' ? `<div class="detail-spec"><strong>${p.abv}%</strong>ABV</div>` : '',
-    p.ibu && p.ibu !== '—' ? `<div class="detail-spec"><strong>${p.ibu}</strong>IBU</div>` : '',
+    p.abv && p.abv!=='—' ? `<div class="detail-spec"><strong>${p.abv}%</strong>ABV</div>` : '',
+    p.ibu && p.ibu!=='—' ? `<div class="detail-spec"><strong>${p.ibu}</strong>IBU</div>` : '',
     p.pais ? `<div class="detail-spec"><strong>${p.pais}</strong>País</div>` : '',
-  ].join('');
+  ].filter(Boolean).join('');
 
-  const harmonizacao = p.harmonizacao
+  const harmonizacaoHTML = p.harmonizacao
     ? `<div><div class="detail-section-title">Harmonização</div><div class="detail-harmonia">${p.harmonizacao.split(',').map(h=>`<span class="detail-harmonia-tag">${h.trim()}</span>`).join('')}</div></div>`
     : '';
 
-  const historia = p.historia
+  const historiaHTML = p.historia
     ? `<div><div class="detail-section-title">História & Receita</div><div class="detail-text">${p.historia}</div></div>`
     : '';
 
@@ -533,12 +531,12 @@ function openDetail(id) {
     <div class="detail-tags">${typeTag(p.tipo)}${styleDot(color)}<span style="font-size:11px;color:var(--text3)">${p.estilo}</span></div>
     <div>
       <div class="detail-name">${p.nome}</div>
-      ${p.cervejaria ? `<div class="detail-brewery">${p.cervejaria}</div>` : ''}
+      ${p.cervejaria?`<div class="detail-brewery">${p.cervejaria}</div>`:''}
     </div>
-    ${specs ? `<div class="detail-specs-row">${specs}</div>` : ''}
-    ${p.descricao ? `<div><div class="detail-section-title">Descrição</div><div class="detail-text">${p.descricao}</div></div>` : ''}
-    ${harmonizacao}
-    ${historia}
+    ${specsHTML?`<div class="detail-specs-row">${specsHTML}</div>`:''}
+    ${p.descricao?`<div><div class="detail-section-title">Descrição</div><div class="detail-text">${p.descricao}</div></div>`:''}
+    ${harmonizacaoHTML}
+    ${historiaHTML}
   `;
 
   document.getElementById('detail-footer').innerHTML = `
@@ -546,13 +544,13 @@ function openDetail(id) {
       <div class="detail-price">R$ ${pr.toFixed(2).replace('.',',')}</div>
       <div class="stock" style="margin-top:3px"><span class="sd ${cls}"></span>${label}</div>
     </div>
-    <button class="detail-add-btn" id="detail-add-btn-${p.id}" ${esg?'disabled':''} onclick="addToCart('${p.id}');updateDetailBtn('${p.id}')">
-      ${esg ? 'Esgotado' : (cart[p.id] ? `+ Add (${cart[p.id]} no carrinho)` : '+ Adicionar')}
+    <button class="detail-add-btn" id="detail-add-btn-${p.id}" ${esg?'disabled':''}
+      onclick="addToCart('${p.id}');updateDetailBtn('${p.id}')">
+      ${esg?'Esgotado':cart[p.id]?`+ Add (${cart[p.id]} no carrinho)`:'+ Adicionar'}
     </button>
   `;
 
   document.getElementById('detail-overlay').classList.add('open');
-  document.body.style.overflow = 'hidden';
 }
 
 function updateDetailBtn(id) {
@@ -562,13 +560,12 @@ function updateDetailBtn(id) {
 
 function closeDetail() {
   document.getElementById('detail-overlay').classList.remove('open');
-  document.body.style.overflow = '';
 }
 function closeDetailOutside(e) {
-  if (e.target === document.getElementById('detail-overlay')) closeDetail();
+  if (e.target.id === 'detail-overlay') closeDetail();
 }
 
- modalTargetId=id; const p=soonProducts.find(x=>x.id===id); document.getElementById('modal-beer-name').textContent=`🍺 ${p.nome} — ${p.estilo}`; document.getElementById('modal-nome').value=''; document.getElementById('modal-wpp').value=''; document.getElementById('modal-overlay').classList.add('open'); }
+function openModal(id) { modalTargetId=id; const p=soonProducts.find(x=>x.id===id); document.getElementById('modal-beer-name').textContent=`🍺 ${p.nome} — ${p.estilo}`; document.getElementById('modal-nome').value=''; document.getElementById('modal-wpp').value=''; document.getElementById('modal-overlay').classList.add('open'); }
 function closeModal() { document.getElementById('modal-overlay').classList.remove('open'); modalTargetId=null; }
 function closeModalOutside(e) { if(e.target===document.getElementById('modal-overlay')) closeModal(); }
 
