@@ -182,6 +182,64 @@ main { max-width: 1020px; margin: 0 auto; padding: 1.5rem 1rem 6rem; }
 .whatsapp-btn { width: 100%; background: #25D366; color: #fff; border: none; border-radius: var(--rs); padding: 13px; font-size: 15px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; }
 .whatsapp-btn:hover { background: #1ebe5b; }
 
+/* MODAL DETALHES */
+.detail-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.7); z-index: 300; align-items: flex-end; justify-content: center; }
+.detail-overlay.open { display: flex; }
+@media(min-width:600px){ .detail-overlay { align-items: center; } }
+.detail-modal {
+  background: var(--bg1); border: 1px solid var(--border2);
+  border-radius: var(--r) var(--r) 0 0;
+  width: 100%; max-width: 560px; max-height: 90vh;
+  display: flex; flex-direction: column; overflow: hidden;
+}
+@media(min-width:600px){ .detail-modal { border-radius: var(--r); } }
+.detail-img {
+  width: 100%; height: 220px; flex-shrink: 0;
+  background: var(--bg2); position: relative; overflow: hidden;
+  display: flex; align-items: center; justify-content: center;
+}
+.detail-img img { width: 100%; height: 100%; object-fit: cover; position: absolute; inset: 0; }
+.detail-img-close {
+  position: absolute; top: 10px; right: 10px; z-index: 2;
+  background: rgba(0,0,0,.5); border: none; border-radius: 50%;
+  width: 32px; height: 32px; color: #fff; font-size: 16px;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+}
+.detail-body { flex: 1; overflow-y: auto; padding: 1.2rem; display: flex; flex-direction: column; gap: 14px; }
+.detail-tags { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+.detail-name { font-size: 20px; font-weight: 700; line-height: 1.2; }
+.detail-brewery { font-size: 13px; color: var(--text2); font-weight: 500; }
+.detail-specs-row {
+  display: flex; gap: 8px; flex-wrap: wrap;
+}
+.detail-spec {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: var(--rs); padding: 6px 12px;
+  font-size: 11px; color: var(--text2); text-align: center;
+}
+.detail-spec strong { display: block; font-size: 15px; font-weight: 700; color: var(--text); margin-bottom: 1px; }
+.detail-section-title { font-size: 10px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--text3); margin-bottom: 4px; }
+.detail-text { font-size: 13px; color: var(--text2); line-height: 1.7; }
+.detail-harmonia { display: flex; flex-wrap: wrap; gap: 6px; }
+.detail-harmonia-tag {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: 999px; padding: 4px 10px;
+  font-size: 12px; color: var(--text2);
+}
+.detail-footer {
+  padding: 1rem 1.2rem; border-top: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  flex-shrink: 0;
+}
+.detail-price { font-size: 22px; font-weight: 700; color: var(--amber); }
+.detail-add-btn {
+  background: var(--amber); color: #fff; border: none;
+  border-radius: var(--rs); padding: 11px 20px;
+  font-size: 14px; font-weight: 600; cursor: pointer; flex-shrink: 0;
+}
+.detail-add-btn:hover { background: var(--amber-d); }
+.detail-add-btn:disabled { background: var(--bg4); color: var(--text3); cursor: not-allowed; }
+
 /* MODAL */
 .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.65); z-index: 300; align-items: center; justify-content: center; padding: 1rem; }
 .modal-overlay.open { display: flex; }
@@ -279,6 +337,16 @@ main { max-width: 1020px; margin: 0 auto; padding: 1.5rem 1rem 6rem; }
   <div class="drawer-footer" id="drawer-footer" style="display:none">
     <div class="cart-total"><span>Total</span><strong id="cart-total">R$ 0,00</strong></div>
     <button class="whatsapp-btn" onclick="sendWhatsApp()">💬 Pedir pelo WhatsApp</button>
+  </div>
+</div>
+
+<div class="detail-overlay" id="detail-overlay" onclick="closeDetailOutside(event)">
+  <div class="detail-modal">
+    <div class="detail-img" id="detail-img">
+      <button class="detail-img-close" onclick="closeDetail()">✕</button>
+    </div>
+    <div class="detail-body" id="detail-body"></div>
+    <div class="detail-footer" id="detail-footer"></div>
   </div>
 </div>
 
@@ -399,7 +467,7 @@ function cardHTML(p) {
   const specs=(p.abv&&p.abv!=='—')?`<div class="card-specs">${p.volume?`<span><strong>${p.volume}</strong> ml</span>`:''}<span><strong>${p.abv}%</strong> ABV</span>${p.ibu&&p.ibu!=='—'?`<span><strong>${p.ibu}</strong> IBU</span>`:''}</div>`:p.volume?`<div class="card-specs"><span><strong>${p.volume}</strong> ml</span></div>`:'';
   const styleRow=`<div class="card-style-row">${styleDot(color)}<span class="card-style">${p.estilo}</span></div>`;
   const brewery=p.cervejaria?`<div class="card-brewery">${p.cervejaria}</div>`:'';
-  return `<div class="card">${imgArea}<div class="card-body">${typeTag(p.tipo)}<div class="card-name">${p.nome}</div>${brewery}${styleRow}${specs}<div class="card-desc">${p.descricao}</div></div><div class="card-footer"><div><div class="card-price">R$ ${pr.toFixed(2).replace('.',',')}</div><div class="stock"><span class="sd ${cls}"></span>${label}</div></div><div style="display:flex;align-items:center;gap:6px;position:relative">${esg?'':`<span id="card-badge-${p.id}" style="display:none;background:var(--amber);color:#fff;border-radius:50%;width:18px;height:18px;font-size:10px;font-weight:700;align-items:center;justify-content:center;flex-shrink:0">0</span>`}<button id="add-btn-${p.id}" class="add-btn" ${esg?'disabled':''} onclick="addToCart('${p.id}')">${esg?'Esgotado':'+ Add'}</button></div></div></div>`;
+  return `<div class="card" onclick="openDetail('${p.id}')" style="cursor:pointer">${imgArea}<div class="card-body">${typeTag(p.tipo)}<div class="card-name">${p.nome}</div>${brewery}${styleRow}${specs}<div class="card-desc">${p.descricao}</div></div><div class="card-footer" onclick="event.stopPropagation()"><div><div class="card-price">R$ ${pr.toFixed(2).replace('.',',')}</div><div class="stock"><span class="sd ${cls}"></span>${label}</div></div><div style="display:flex;align-items:center;gap:6px;position:relative">${esg?'':`<span id="card-badge-${p.id}" style="display:none;background:var(--amber);color:#fff;border-radius:50%;width:18px;height:18px;font-size:10px;font-weight:700;align-items:center;justify-content:center;flex-shrink:0">0</span>`}<button id="add-btn-${p.id}" class="add-btn" ${esg?'disabled':''} onclick="addToCart('${p.id}')">${esg?'Esgotado':'+ Add'}</button></div></div></div>`;
 }
 
 function renderSoon() {
@@ -420,7 +488,87 @@ function soonCardHTML(p) {
   return `<div class="soon-card">${imgArea}<div class="soon-overlay">Em breve</div><div class="soon-card-body"><div class="soon-card-name">${p.nome}</div>${styleRow}<div class="soon-card-desc">${p.descricao}</div><div class="soon-meta"><span>📅 <strong>${p.previsao}</strong></span>${p.quantidade?`<span>🍺 <strong>${p.quantidade} un.</strong></span>`:''}</div></div><div class="soon-card-footer"><div><div class="soon-price ${pr?'has':''}">${pr?'R$ '+pr.toFixed(2).replace('.',','):'A confirmar'}</div><div class="soon-interested" id="int-${p.id}"><span class="soon-interested-dot"></span>${total} ${total===1?'pessoa aguardando':'pessoas aguardando'}</div></div><button class="notify-btn" id="nbtn-${p.id}" onclick="openModal('${p.id}')">${reg>0?'✓ Registrado':'🔔 Avise-me'}</button></div></div>`;
 }
 
-function openModal(id) { modalTargetId=id; const p=soonProducts.find(x=>x.id===id); document.getElementById('modal-beer-name').textContent=`🍺 ${p.nome} — ${p.estilo}`; document.getElementById('modal-nome').value=''; document.getElementById('modal-wpp').value=''; document.getElementById('modal-overlay').classList.add('open'); }
+function openDetail(id) {
+  const p = allProducts.find(x => x.id === id);
+  if (!p) return;
+  const color = styleColor(p.estilo);
+  const esg = parseInt(p.estoque) === 0;
+  const pr = parseFloat(p.preco) || 0;
+  const { cls, label } = stockInfo(p.estoque);
+
+  const imgEl = document.getElementById('detail-img');
+  imgEl.style.background = color + '22';
+  const existing = imgEl.querySelector('img');
+  if (existing) existing.remove();
+  const fallbackEl = imgEl.querySelector('.detail-fallback');
+  if (fallbackEl) fallbackEl.remove();
+  if (p.foto_url) {
+    const img = document.createElement('img');
+    img.src = p.foto_url; img.alt = p.nome;
+    imgEl.appendChild(img);
+  } else {
+    const fb = document.createElement('div');
+    fb.className = 'detail-fallback';
+    fb.innerHTML = mugSVG(color);
+    fb.style.cssText = 'display:flex;align-items:center;justify-content:center;width:100%;height:100%';
+    imgEl.appendChild(fb);
+  }
+
+  const specs = [
+    p.volume ? `<div class="detail-spec"><strong>${p.volume}</strong>ml</div>` : '',
+    p.abv && p.abv !== '—' ? `<div class="detail-spec"><strong>${p.abv}%</strong>ABV</div>` : '',
+    p.ibu && p.ibu !== '—' ? `<div class="detail-spec"><strong>${p.ibu}</strong>IBU</div>` : '',
+    p.pais ? `<div class="detail-spec"><strong>${p.pais}</strong>País</div>` : '',
+  ].join('');
+
+  const harmonizacao = p.harmonizacao
+    ? `<div><div class="detail-section-title">Harmonização</div><div class="detail-harmonia">${p.harmonizacao.split(',').map(h=>`<span class="detail-harmonia-tag">${h.trim()}</span>`).join('')}</div></div>`
+    : '';
+
+  const historia = p.historia
+    ? `<div><div class="detail-section-title">História & Receita</div><div class="detail-text">${p.historia}</div></div>`
+    : '';
+
+  document.getElementById('detail-body').innerHTML = `
+    <div class="detail-tags">${typeTag(p.tipo)}${styleDot(color)}<span style="font-size:11px;color:var(--text3)">${p.estilo}</span></div>
+    <div>
+      <div class="detail-name">${p.nome}</div>
+      ${p.cervejaria ? `<div class="detail-brewery">${p.cervejaria}</div>` : ''}
+    </div>
+    ${specs ? `<div class="detail-specs-row">${specs}</div>` : ''}
+    ${p.descricao ? `<div><div class="detail-section-title">Descrição</div><div class="detail-text">${p.descricao}</div></div>` : ''}
+    ${harmonizacao}
+    ${historia}
+  `;
+
+  document.getElementById('detail-footer').innerHTML = `
+    <div>
+      <div class="detail-price">R$ ${pr.toFixed(2).replace('.',',')}</div>
+      <div class="stock" style="margin-top:3px"><span class="sd ${cls}"></span>${label}</div>
+    </div>
+    <button class="detail-add-btn" id="detail-add-btn-${p.id}" ${esg?'disabled':''} onclick="addToCart('${p.id}');updateDetailBtn('${p.id}')">
+      ${esg ? 'Esgotado' : (cart[p.id] ? `+ Add (${cart[p.id]} no carrinho)` : '+ Adicionar')}
+    </button>
+  `;
+
+  document.getElementById('detail-overlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function updateDetailBtn(id) {
+  const btn = document.getElementById(`detail-add-btn-${id}`);
+  if (btn && cart[id]) btn.textContent = `+ Add (${cart[id]} no carrinho)`;
+}
+
+function closeDetail() {
+  document.getElementById('detail-overlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+function closeDetailOutside(e) {
+  if (e.target === document.getElementById('detail-overlay')) closeDetail();
+}
+
+ modalTargetId=id; const p=soonProducts.find(x=>x.id===id); document.getElementById('modal-beer-name').textContent=`🍺 ${p.nome} — ${p.estilo}`; document.getElementById('modal-nome').value=''; document.getElementById('modal-wpp').value=''; document.getElementById('modal-overlay').classList.add('open'); }
 function closeModal() { document.getElementById('modal-overlay').classList.remove('open'); modalTargetId=null; }
 function closeModalOutside(e) { if(e.target===document.getElementById('modal-overlay')) closeModal(); }
 
