@@ -127,6 +127,8 @@ main { max-width: 1020px; margin: 0 auto; padding: 1.5rem 1rem 6rem; }
 .add-btn { background: var(--bg3); color: var(--text2); border: 1px solid var(--border2); border-radius: var(--rs); padding: 6px 12px; font-size: 12px; font-weight: 500; cursor: pointer; white-space: nowrap; }
 .add-btn:hover:not(:disabled) { background: var(--amber); color: #fff; border-color: var(--amber); }
 .add-btn:disabled { opacity: .3; cursor: not-allowed; }
+.share-btn { background: var(--bg3); color: var(--text2); border: 1px solid var(--border2); border-radius: var(--rs); padding: 6px 10px; font-size: 12px; cursor: pointer; white-space: nowrap; }
+.share-btn:hover { background: var(--bg4); color: var(--text); }
 
 /* EM BREVE */
 .soon-section { margin-top: 3rem; padding-top: 2.5rem; border-top: 1px solid var(--border); }
@@ -425,6 +427,7 @@ async function init() {
   const [cat, soon] = await Promise.all([fetchCSV(SHEET_CATALOGO,DEMO), fetchCSV(SHEET_EM_BREVE,DEMO_SOON)]);
   allProducts=cat; soonProducts=soon;
   renderCatalog(); renderSoon();
+  checkURLProduct();
 }
 
 async function fetchCSV(url, fallback) {
@@ -449,7 +452,10 @@ function setFilter(tipo,btn) { activeFilter=tipo; document.querySelectorAll('.fb
 
 function renderCatalog() {
   const q=document.getElementById('search').value.toLowerCase();
-  const f=allProducts.filter(p=>(activeFilter==='todos'||p.tipo===activeFilter)&&(!q||p.nome.toLowerCase().includes(q)||(p.estilo||'').toLowerCase().includes(q)||(p.descricao||'').toLowerCase().includes(q)));
+  const f=allProducts.filter(p=>{
+    if(p.ativo && p.ativo.toLowerCase()==='nao') return false;
+    return (activeFilter==='todos'||p.tipo===activeFilter)&&(!q||p.nome.toLowerCase().includes(q)||(p.estilo||'').toLowerCase().includes(q)||(p.descricao||'').toLowerCase().includes(q));
+  });
   document.getElementById('section-label').textContent=`${f.length} ${f.length===1?'item disponível':'itens disponíveis'}`;
   const g=document.getElementById('grid');
   g.innerHTML=f.length ? f.map(cardHTML).join('') : `<div class="empty">Nenhuma cerveja encontrada. 🔍</div>`;
@@ -481,14 +487,16 @@ function cardHTML(p) {
   const specs=(p.abv&&p.abv!=='—')?`<div class="card-specs">${p.volume?`<span><strong>${p.volume}</strong> ml</span>`:''}<span><strong>${p.abv}%</strong> ABV</span>${p.ibu&&p.ibu!=='—'?`<span><strong>${p.ibu}</strong> IBU</span>`:''}</div>`:p.volume?`<div class="card-specs"><span><strong>${p.volume}</strong> ml</span></div>`:'';
   const styleRow=`<div class="card-style-row">${styleDot(color)}<span class="card-style">${p.estilo}</span></div>`;
   const brewery=p.cervejaria?`<div class="card-brewery">${p.cervejaria}</div>`:'';
-  return `<div class="card" onclick="openDetail('${p.id}')" style="cursor:pointer">${imgArea}<div class="card-body">${typeTag(p.tipo)}<div class="card-name">${p.nome}</div>${brewery}${styleRow}${specs}<div class="card-desc">${p.descricao}</div></div><div class="card-footer" onclick="event.stopPropagation()"><div><div class="card-price">R$ ${pr.toFixed(2).replace('.',',')}</div><div class="stock"><span class="sd ${cls}"></span>${label}</div></div><div style="display:flex;align-items:center;gap:6px">${esg?'':`<span id="card-badge-${p.id}" style="display:none;background:var(--amber);color:#fff;border-radius:50%;width:18px;height:18px;font-size:10px;font-weight:700;align-items:center;justify-content:center;flex-shrink:0">0</span>`}<button id="add-btn-${p.id}" class="add-btn" ${esg?'disabled':''} onclick="addToCart('${p.id}')">${esg?'Esgotado':'+ Add'}</button></div></div></div>`;
+  const shareBtn=`<button class="share-btn" onclick="event.stopPropagation();shareProduct('${p.id}')" title="Compartilhar">↗</button>`;
+  return `<div class="card" onclick="openDetail('${p.id}')" style="cursor:pointer">${imgArea}<div class="card-body">${typeTag(p.tipo)}<div class="card-name">${p.nome}</div>${brewery}${styleRow}${specs}<div class="card-desc">${p.descricao}</div></div><div class="card-footer" onclick="event.stopPropagation()"><div><div class="card-price">R$ ${pr.toFixed(2).replace('.',',')}</div><div class="stock"><span class="sd ${cls}"></span>${label}</div></div><div style="display:flex;align-items:center;gap:6px">${esg?'':`<span id="card-badge-${p.id}" style="display:none;background:var(--amber);color:#fff;border-radius:50%;width:18px;height:18px;font-size:10px;font-weight:700;align-items:center;justify-content:center;flex-shrink:0">0</span>`}<button id="add-btn-${p.id}" class="add-btn" ${esg?'disabled':''} onclick="addToCart('${p.id}')">${esg?'Esgotado':'+ Add'}</button>${shareBtn}</div></div></div>`;
 }
 
 function renderSoon() {
-  if(!soonProducts.length) return;
+  const ativos = soonProducts.filter(p => !p.ativo || p.ativo.toLowerCase() !== 'nao');
+  if(!ativos.length) return;
   document.getElementById('soon-section').style.display='block';
   const g=document.getElementById('soon-grid');
-  g.innerHTML=soonProducts.map(soonCardHTML).join('');
+  g.innerHTML=ativos.map(soonCardHTML).join('');
   g.querySelectorAll('img[data-src]').forEach(lazyLoad);
 }
 
@@ -660,10 +668,13 @@ function openDetail(id) {
       <div class="detail-price">R$ ${pr.toFixed(2).replace('.',',')}</div>
       <div class="stock" style="margin-top:3px"><span class="sd ${cls}"></span>${label}</div>
     </div>
-    <button class="detail-add-btn" id="detail-add-btn-${p.id}" ${esg?'disabled':''}
-      onclick="addToCart('${p.id}');updateDetailBtn('${p.id}')">
-      ${esg?'Esgotado':cart[p.id]?`+ Add (${cart[p.id]} no carrinho)`:'+ Adicionar'}
-    </button>
+    <div style="display:flex;gap:8px;align-items:center">
+      <button class="share-btn" style="padding:11px 12px" onclick="shareProduct('${p.id}')">↗ Compartilhar</button>
+      <button class="detail-add-btn" id="detail-add-btn-${p.id}" ${esg?'disabled':''}
+        onclick="addToCart('${p.id}');updateDetailBtn('${p.id}')">
+        ${esg?'Esgotado':cart[p.id]?`+ Add (${cart[p.id]} no carrinho)`:'+ Adicionar'}
+      </button>
+    </div>
   `;
 
   document.getElementById('detail-overlay').classList.add('open');
@@ -770,6 +781,27 @@ function sendWhatsApp() {
 function lazyLoad(img) { const s=img.dataset.src; if(!s) return; img.src=s; }
 
 function showToast(msg) { const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2200); }
+
+function shareProduct(id) {
+  const url = `${window.location.origin}${window.location.pathname}?produto=${id}`;
+  if (navigator.share) {
+    const p = allProducts.find(x => x.id === id);
+    navigator.share({ title: p ? p.nome : 'Cervejeira do Juninho', url });
+  } else if (navigator.clipboard) {
+    navigator.clipboard.writeText(url).then(() => showToast('Link copiado! 🍺'));
+  } else {
+    showToast('Link: ' + url);
+  }
+}
+
+function checkURLProduct() {
+  const params = new URLSearchParams(window.location.search);
+  const id = params.get('produto');
+  if (id) {
+    const p = allProducts.find(x => x.id === id);
+    if (p) setTimeout(() => openDetail(id), 300);
+  }
+}
 
 init();
 </script>
